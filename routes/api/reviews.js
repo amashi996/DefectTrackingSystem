@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const gravatar = require('gravatar');
-const bcrypt = require('bcryptjs');
-const consfig = require('config');
-const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
-//const normalize = require('normalize-url');
+const auth = require('../../middleware/auth');
 
-const Uesr = require('../../models/Review');
+const Review = require('../../models/Review');
+const User = require('../../models/User');
+const checkObjectID = require('../../middleware/checkObjectId');
 
 // @route   GET api/reviewa/
 // @desc    Test Screen
