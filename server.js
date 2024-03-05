@@ -5,6 +5,7 @@ const path = require('path');
 const users = require('./routes/api/users');
 const profile = require('./routes/api/profile');
 const reviews = require('./routes/api/reviews');
+const auth = require('./routes/api/auth');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // Use Routes
 app.use('/api/users', users);
+app.use('/api/auth', auth);
 app.use('/api/profile', profile);
 app.use('/api/reviews', reviews);
 
