@@ -163,6 +163,106 @@ router.put('/unlike/:reviewId', auth, checkObjectID('reviewId'), async (req, res
     }
   });
 
+// @route    GET api/reviews
+// @desc     Get all reviews
+// @access   Private
+router.get('/', auth, async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ date: -1 });
+    res.json(reviews);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
-  
+// @route    GET api/reviews/:reviewId
+// @desc     Get review by ID
+// @access   Private
+router.get('/:reviewId', auth, checkObjectID('reviewId'), async (req, res) => {
+  try {
+      const review = await Review.findById(req.params.reviewId);
+
+      if (!review) {
+          return res.status(404).json({ msg: 'Review not found' });
+      }
+
+      res.json(review);
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/reviews/comment/:reviewId
+// @desc     Add a comment to a review
+// @access   Private
+router.post('/comment/:reviewId', auth, checkObjectID('reviewId'), check('text', 'Comment text is required').notEmpty(), async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      errors: errors.array()
+    });
+  }
+
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    const review = await Review.findById(req.params.reviewId);
+
+    if (!review) {
+      return res.status(404).json({ msg: 'Review not found' });
+    }
+
+    const newComment = {
+      user: req.user.id,
+      text: req.body.text,
+      name: user.name,
+      avatar: user.avatar
+    };
+
+    review.reviewComments.unshift(newComment);
+
+    await review.save();
+
+    res.json(review.reviewComments);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    DELETE api/reviews/deleteComment/:reviewId/:commentId
+// @desc     Delete a comment from a review
+// @access   Private
+router.delete('/deleteComment/:reviewId/:commentId', auth, checkObjectID('reviewId'), checkObjectID('commentId'), async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.reviewId);
+
+    if (!review) {
+      return res.status(404).json({ msg: 'Review not found' });
+    }
+
+    const comment = review.reviewComments.find(comment => comment.id === req.params.commentId);
+
+    if (!comment) {
+      return res.status(404).json({ msg: 'Comment not found' });
+    }
+
+    // Check if the user deleting the comment is the one who added it
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized to delete this comment' });
+    }
+
+    // Remove the comment
+    review.reviewComments = review.reviewComments.filter(({ id }) => id !== req.params.commentId);
+
+    await review.save();
+
+    res.json(review.reviewComments);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;
