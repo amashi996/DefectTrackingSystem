@@ -56,6 +56,64 @@ router.post(
     }
 );
 
+// @route   PUT api/reviews/updateReview/:reviewId
+// @desc    Update a review
+// @access  Private
+/*router.put('/updateReview/:reviewId', auth, checkObjectID('reviewId'), async (req, res) => {
+  try {
+      console.log(req.user);
+      const { reviewText } = req.body;
+
+      // Check if the review exists
+      const review = await Review.findById(req.params.reviewId);
+      if (!review) {
+          return res.status(404).json({ msg: 'Review not found' });
+      }
+
+      // Check if the logged-in user is the one who added the review
+      if (review.user.toString() !== req.user.id) {
+          return res.status(401).json({ msg: 'User not authorized to update this review' });
+      }
+
+      // Update the review text
+      review.reviewText = reviewText;
+
+      // Save the updated review
+      await review.save();
+
+      return res.json(review);
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+  }
+});
+
+// @route   DELETE api/reviews/delete/:reviewId
+// @desc    Delete a review
+// @access  Private
+router.delete('/delete/:reviewId', auth, checkObjectID('reviewId'), async (req, res) => {
+  try {
+      // Check if the review exists
+      const review = await Review.findById(req.params.reviewId);
+      if (!review) {
+          return res.status(404).json({ msg: 'Review not found' });
+      }
+
+      // Check if the logged-in user is the one who added the review
+      if (review.user.toString() !== req.user.id) {
+          return res.status(401).json({ msg: 'User not authorized to delete this review' });
+      }
+
+      // Remove the review
+      await review.remove();
+
+      return res.json({ msg: 'Review deleted successfully' });
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+  }
+});*/
+
 // @route   PUT api/reviews/like/:reviewId
 // @desc    Like a review
 // @access  Private
@@ -104,5 +162,7 @@ router.put('/unlike/:reviewId', auth, checkObjectID('reviewId'), async (req, res
       res.status(500).send('Server Error');
     }
   });
+
+
   
 module.exports = router;
