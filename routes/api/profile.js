@@ -9,6 +9,7 @@ const checkObjectId = require('../../middleware/checkObjectId');
 const User = require('../../models/User');
 const Profile = require('../../models/Profile');
 const Review = require('../../models/Review');
+const Achievement = require('../../models/Achievement');
 
 // @route   GET api/profile/
 // @desc    Test Screen
@@ -17,28 +18,48 @@ router.get('/test-pro', (req,res) => res.json({
     msg: 'Profile Works'
 }));
 
-
 // @route   GET api/profile/me
-// @desc    Get current user profile
+// @desc    Get current user's profile
 // @access  Private
 router.get('/me', auth, async (req, res) => {
-    try{
-        const profile = await Profile.findOne({
-            user: req.user.id
-        }).populate('user', ['name', 'avatar']);
+  try {
+      const profile = await Profile.findOne({ user: req.user.id })
+          .populate('user', ['name', 'avatar'])
+          .populate('achievements'); // Populate achievements
 
-        if(!profile) {
-            return res.status(400).json({
-                msg: 'There is no profile for this user'
-            });
-        }
+      if (!profile) {
+          return res.status(400).json({ msg: 'There is no profile for this user' });
+      }
 
-        res.json(profile);
+      res.json(profile);
 
-    }catch (err){
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+  }
+});
+
+// @route   GET api/profile/me/achievements
+// @desc    Get achievements for the logged-in user
+// @access  Private
+router.get('/me/achievements', auth, async (req, res) => {
+  try {
+      const profile = await Profile.findOne({ user: req.user.id }).populate('achievements');
+
+      if (!profile) {
+          return res.status(400).json({ msg: 'Profile not found' });
+      }
+
+      if (profile.achievements.length === 0) {
+          return res.json({ msg: 'No achievements found for this user' });
+      }
+
+      res.json(profile.achievements);
+
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+  }
 });
 
 // @route   POST api/profile/

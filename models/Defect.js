@@ -6,6 +6,10 @@ const DefectSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Project"
   },
+  projectTitle: {
+    type: String,
+    required: true // Assuming project title is required for the defect
+  },
   defectTitle: {
     type: String,
     required: true,
@@ -34,7 +38,7 @@ const DefectSchema = new Schema({
     ref: "user",
     required: true,
   },
-  assignedBy: {
+  assignedTo: {
     type: Schema.Types.ObjectId,
     ref: "user",
     required: true,
@@ -49,6 +53,10 @@ const DefectSchema = new Schema({
   },
   closedDate: {
     type: Date,
+  },
+  modifiedDate:{
+    type: Date,
+    default: Date.now
   },
   reproduceSteps: {
     type: String,

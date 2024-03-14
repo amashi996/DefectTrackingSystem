@@ -24,6 +24,7 @@ router.post(
       check('achievementName', 'Achievement name is required').notEmpty(),
       check('achievementCode', 'Achievement code is required').notEmpty(),
       check('achievementDesc', 'Achievement description is required').notEmpty(),
+      check('achievementType', 'Achievement type is required').notEmpty(),
     ],
     async (req, res) => {
       // Validate user role
@@ -44,9 +45,19 @@ router.post(
         }
   
         const {
-            achievementName,
-            achievementCode,
-            achievementDesc,
+          achievementName,
+          achievementCode,
+          achievementDesc,
+          achievementType,
+          criteria,
+          badgeUrl,
+          points,
+          level,
+          visibility,
+          status,
+          relatedObject,
+          relatedObjectType,
+          tags
         } = req.body;
   
         // Check for duplicate achievement name or achievement code
@@ -69,6 +80,16 @@ router.post(
           achievementName,
           achievementCode,
           achievementDesc,
+          achievementType,
+          criteria,
+          badgeUrl,
+          points,
+          level,
+          visibility,
+          status,
+          relatedObject,
+          relatedObjectType,
+          tags
         };
   
         const achievement = new Achievement(achievementField);
@@ -108,7 +129,22 @@ router.put(
         });
       }
 
-      const { achievementName, achievementCode, achievementDesc } = req.body;
+      
+      const {
+        achievementName,
+        achievementCode,
+        achievementDesc,
+        achievementType,
+        criteria,
+        badgeUrl,
+        points,
+        level,
+        visibility,
+        status,
+        relatedObject,
+        relatedObjectType,
+        tags
+      } = req.body;
 
       const achievement = await Achievement.findById(req.params.achievementId);
 
@@ -137,6 +173,36 @@ router.put(
       }
       if (achievementDesc) {
         achievement.achievementDesc = achievementDesc;
+      }
+      if (achievementType) {
+        achievement.achievementType = achievementType;
+      }
+      if (criteria){
+        achievement.criteria = criteria;
+      } 
+      if (badgeUrl){
+        achievement.badgeUrl = badgeUrl;
+      }
+      if (points){
+        achievement.points = points;
+      }
+      if (level){
+        achievement.level = level;
+      }
+      if (visibility){
+        achievement.visibility = visibility;
+      }
+      if (status){
+        achievement.status = status;
+      }
+      if (relatedObject){
+        achievement.relatedObject = relatedObject;
+      }
+      if (relatedObjectType){
+        achievement.relatedObjectType = relatedObjectType;
+      }
+      if (tags){
+        achievement.tags = tags;
       }
 
       await achievement.save();

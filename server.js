@@ -8,6 +8,7 @@ const reviews = require('./routes/api/reviews');
 const auth = require('./routes/api/auth');
 const projects = require('./routes/api/projects');
 const achievements = require('./routes/api/achievements');
+const defects = require('./routes/api/defects');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/profile', profile);
 app.use('/api/reviews', reviews);
 app.use('/api/projects', projects);
 app.use('/api/achievements', achievements);
+app.use('/api/defects', defects);
 
 const port = process.env.PORT || 5000;
 

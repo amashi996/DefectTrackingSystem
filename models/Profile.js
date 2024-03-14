@@ -5,6 +5,12 @@ const ProfileSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    achievements: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Achievement'
+        }
+    ],
     company: {
         type: String
     },
