@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ReviewSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'users'
+        ref: 'User'
     },
     reviewText: {
         type: String,
@@ -50,4 +50,4 @@ const ReviewSchema = new Schema({
     ],
 });
 
-module.exports = mongoose.model('review', ReviewSchema);
+module.exports = mongoose.model('Review', ReviewSchema);

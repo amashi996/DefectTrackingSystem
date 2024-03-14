@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ProjectSchema = new Schema ({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'users'
+        ref: 'User'
     }, 
     projectName : {
         type: String,
@@ -53,4 +53,4 @@ const ProjectSchema = new Schema ({
     ],
 });
 
-module.exports = mongoose.model('project', ProjectSchema);
+module.exports = mongoose.model('Project', ProjectSchema);
