@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const config = require('config');
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
 const { check, validationResult } = require('express-validator');
 const auth = require('../../middleware/auth');
 const upload = require('../../middleware/uploadMiddleware');
@@ -210,6 +213,42 @@ router.put(
     }
 );
 
+// @route   GET api/defects/allDefects
+// @desc    View all defects
+// @access  Private
+router.get('/allDefects', auth, async (req, res) => {
+    try {
+        // Retrieve all defects
+        const defects = await Defect.find();
+        res.json(defects);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/defects/defect/:defectId
+// @desc    View a selected defect
+// @access  Private
+router.get('/defect/:defectId', auth, async (req, res) => {
+    try {
+        // Retrieve the selected defect
+        const defect = await Defect.findById(req.params.defectId);
+        
+        if (!defect) {
+            return res.status(404).json({ msg: 'Defect not found' });
+        }
+
+        res.json(defect);
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Defect not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   POST api/defects/uploadAttachments/:defectId
 // @desc    Upload attachments for a defect
 // @access  Private
@@ -223,7 +262,7 @@ router.post(
         if (!defect) {
           return res.status(404).json({ msg: 'Defect not found' });
         }
-  
+
         // Assuming defectAttachment is an array
         const files = req.files.map(file => ({
           fileName: file.filename,
@@ -243,5 +282,179 @@ router.post(
     }
   );
 
+// @route   DELETE api/defects/deleteAttachment/:defectId/:attachmentId
+// @desc    Delete a single attachment from a defect
+// @access  Private
+router.delete(
+    '/deleteAttachment/:defectId/:attachmentId',
+    auth,
+    async (req, res) => {
+        try {
+            const defect = await Defect.findById(req.params.defectId);
+
+            if (!defect) {
+                return res.status(404).json({ msg: 'Defect not found' });
+            }
+
+            // Find the attachment by ID
+            const attachment = defect.defectAttachment.find(attachment => attachment._id.toString() === req.params.attachmentId);
+
+            if (!attachment) {
+                return res.status(404).json({ msg: 'Attachment not found' });
+            }
+
+            // Remove the attachment from the defect
+            defect.defectAttachment = defect.defectAttachment.filter(att => att._id.toString() !== req.params.attachmentId);
+
+            await defect.save();
+
+            // Delete the attachment file from the uploads folder
+            const filePath = path.join(__dirname, '../../uploads', attachment.fileName);
+            fs.unlinkSync(filePath); // Synchronously delete the file
+
+            res.json({ msg: 'Attachment deleted successfully' });
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    }
+);
+
+// @route   DELETE api/defects/deleteAllAttachments/:defectId
+// @desc    Delete all attachments of a defect
+// @access  Private
+router.delete('/deleteAllAttachments/:defectId', auth, async (req, res) => {
+    try {
+        const defect = await Defect.findById(req.params.defectId);
+
+        if (!defect) {
+            return res.status(404).json({ msg: 'Defect not found' });
+        }
+
+        // Delete all attachment files from the uploads folder
+        defect.defectAttachment.forEach(attachment => {
+            const filePath = path.join(__dirname, '../../uploads', attachment.fileName);
+            fs.unlinkSync(filePath); // Synchronously delete the file
+        });
+
+        // Clear all attachments
+        defect.defectAttachment = [];
+
+        await defect.save();
+
+        res.json({ msg: 'All attachments deleted successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/defects/viewAttachment/:defectId/:attachmentId
+// @desc    View details of a single attachment from a defect
+// @access  Private
+router.get(
+    '/viewAttachment/:defectId/:attachmentId',
+    auth,
+    async (req, res) => {
+        try {
+            const defect = await Defect.findById(req.params.defectId);
+
+            if (!defect) {
+                return res.status(404).json({ msg: 'Defect not found' });
+            }
+
+            // Find the attachment by ID
+            const attachment = defect.defectAttachment.find(attachment => attachment._id.toString() === req.params.attachmentId);
+
+            if (!attachment) {
+                return res.status(404).json({ msg: 'Attachment not found' });
+            }
+
+            res.json(attachment);
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    }
+);
+
+// @route   GET api/defects/viewAttachments/:defectId
+// @desc    View details of all attachments from a defect
+// @access  Private
+router.get(
+    '/viewAttachments/:defectId',
+    auth,
+    async (req, res) => {
+        try {
+            const defect = await Defect.findById(req.params.defectId);
+
+            if (!defect) {
+                return res.status(404).json({ msg: 'Defect not found' });
+            }
+
+            res.json(defect.defectAttachment);
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    }
+);
+
+// @route   GET api/defects/downloadAttachments/:defectId
+// @desc    Download multiple attachments from a defect as a zip file
+// @access  Private
+router.get('/downloadAttachments/:defectId', auth, async (req, res) => {
+    try {
+        const defect = await Defect.findById(req.params.defectId);
+
+        if (!defect) {
+            return res.status(404).json({ msg: 'Defect not found' });
+        }
+
+        // Get the list of attachment IDs from the query parameters
+        const attachmentIds = req.query.attachmentIds;
+
+        if (!attachmentIds || attachmentIds.length === 0) {
+            return res.status(400).json({ msg: 'Attachment IDs must be provided as an array' });
+        }
+
+        // Create a zip file
+        const zipFileName = `attachments_${defect._id}.zip`;
+        const zipFilePath = path.join(__dirname, '..', '..', 'temp', zipFileName);
+        const output = fs.createWriteStream(zipFilePath);
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Compression level
+        });
+
+        // Pipe the zip stream to the response
+        output.on('close', () => {
+            res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
+            res.setHeader('Content-Type', 'application/zip');
+            res.sendFile(zipFilePath);
+        });
+
+        archive.on('error', err => {
+            console.error(err);
+            res.status(500).send('Server Error');
+        });
+
+        archive.pipe(output);
+
+        // Add selected attachments to the zip file
+        const selectedAttachments = defect.defectAttachment.filter(attachment => attachmentIds.includes(attachment._id.toString()));
+        selectedAttachments.forEach(attachment => {
+            const filePath = path.join(__dirname, '..', '..', 'uploads', attachment.fileName);
+            archive.file(filePath, { name: attachment.fileName });
+        });
+
+        // Finalize the zip file
+        archive.finalize();
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 module.exports = router;
+
+
