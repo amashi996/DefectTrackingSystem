@@ -4,6 +4,7 @@ const axios = require('axios');
 const config = require('config');
 const { check, validationResult } = require('express-validator');
 const auth = require('../../middleware/auth');
+const upload = require('../../middleware/uploadMiddleware');
 
 const Defect = require('../../models/Defect');
 const User = require('../../models/User');
@@ -208,6 +209,39 @@ router.put(
         }
     }
 );
+
+// @route   POST api/defects/uploadAttachments/:defectId
+// @desc    Upload attachments for a defect
+// @access  Private
+router.post(
+    '/uploadAttachments/:defectId',
+    [auth, upload.array('defectAttachment')],
+    async (req, res) => {
+      try {
+        const defect = await Defect.findById(req.params.defectId);
+  
+        if (!defect) {
+          return res.status(404).json({ msg: 'Defect not found' });
+        }
+  
+        // Assuming defectAttachment is an array
+        const files = req.files.map(file => ({
+          fileName: file.filename,
+          mimetype: file.mimetype,
+          size: file.size,
+          url: `../../uploads/${file.filename}`, 
+        }));
+  
+        defect.defectAttachment.push(...files);
+        await defect.save();
+  
+        res.json({ defectId: defect._id, attachedFiles: files });
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+      }
+    }
+  );
 
 
 module.exports = router;

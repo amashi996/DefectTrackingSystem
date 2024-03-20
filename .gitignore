@@ -1,3 +1,8 @@
 node_modules/
 .vscode/
 config/default.json
+
+# Ignore all files in the uploads/ directory
+uploads/*
+# Except for this file, keep it tracked
+!uploads/.gitkeep
