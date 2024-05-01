@@ -9,6 +9,7 @@ const auth = require('./routes/api/auth');
 const projects = require('./routes/api/projects');
 const achievements = require('./routes/api/achievements');
 const defects = require('./routes/api/defects');
+const defectComments = require('./routes/api/defectComments');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/reviews', reviews);
 app.use('/api/projects', projects);
 app.use('/api/achievements', achievements);
 app.use('/api/defects', defects);
+app.use('/api/defComments', defectComments);
 
 const port = process.env.PORT || 5000;
 

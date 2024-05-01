@@ -268,7 +268,7 @@ router.post(
           fileName: file.filename,
           mimetype: file.mimetype,
           size: file.size,
-          url: `../../uploads/${file.filename}`, 
+          url: `../../uploads/defects/${file.filename}`, 
         }));
   
         defect.defectAttachment.push(...files);
@@ -309,7 +309,7 @@ router.delete(
             await defect.save();
 
             // Delete the attachment file from the uploads folder
-            const filePath = path.join(__dirname, '../../uploads', attachment.fileName);
+            const filePath = path.join(__dirname, '../../uploads/defects/', attachment.fileName);
             fs.unlinkSync(filePath); // Synchronously delete the file
 
             res.json({ msg: 'Attachment deleted successfully' });
@@ -333,7 +333,7 @@ router.delete('/deleteAllAttachments/:defectId', auth, async (req, res) => {
 
         // Delete all attachment files from the uploads folder
         defect.defectAttachment.forEach(attachment => {
-            const filePath = path.join(__dirname, '../../uploads', attachment.fileName);
+            const filePath = path.join(__dirname, '../../uploads/defects/', attachment.fileName);
             fs.unlinkSync(filePath); // Synchronously delete the file
         });
 
@@ -400,6 +400,40 @@ router.get(
     }
 );
 
+// @route   GET api/defects/downloadAttachment/:defectId/:attachmentId
+// @desc    Download a single attachment from a defect
+// @access  Private
+router.get('/downloadAttachment/:defectId/:attachmentId', auth, async (req, res) => {
+    try {
+        const defect = await Defect.findById(req.params.defectId);
+
+        if (!defect) {
+            return res.status(404).json({ msg: 'Defect not found' });
+        }
+
+        // Find the attachment by ID
+        const attachment = defect.defectAttachment.find(attachment => attachment._id.toString() === req.params.attachmentId);
+
+        if (!attachment) {
+            return res.status(404).json({ msg: 'Attachment not found' });
+        }
+
+        // Construct the file path
+        const filePath = path.join(__dirname, '../../uploads/defects/', attachment.fileName);
+
+        // Set the appropriate headers for file download
+        res.setHeader('Content-Disposition', `attachment; filename=${attachment.fileName}`);
+        res.setHeader('Content-Type', attachment.mimetype);
+
+        // Stream the file for download
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/defects/downloadAttachments/:defectId
 // @desc    Download multiple attachments from a defect as a zip file
 // @access  Private
@@ -443,7 +477,7 @@ router.get('/downloadAttachments/:defectId', auth, async (req, res) => {
         // Add selected attachments to the zip file
         const selectedAttachments = defect.defectAttachment.filter(attachment => attachmentIds.includes(attachment._id.toString()));
         selectedAttachments.forEach(attachment => {
-            const filePath = path.join(__dirname, '..', '..', 'uploads', attachment.fileName);
+            const filePath = path.join(__dirname, '..', '..', 'uploads/defects/', attachment.fileName);
             archive.file(filePath, { name: attachment.fileName });
         });
 

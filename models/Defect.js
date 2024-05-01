@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const DefectSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
   projectId: {
     type: Schema.Types.ObjectId,
     ref: "Project"
@@ -90,7 +94,7 @@ const DefectSchema = new Schema({
       },
     },
   ],
-  defectComment: [
+  /*defectComment: [
     {
       user: {
         type: Schema.Types.ObjectId,
@@ -125,6 +129,44 @@ const DefectSchema = new Schema({
         type: String,
         required: true,
       },
+    },
+  ],*/
+
+  defectComment: [
+    {
+      user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+      defectComment: {
+        type: String,
+        required: true,
+      },
+      commentDate: {
+        type: Date,
+        required: true,
+        default: Date.now,
+      },
+      commentAttachment: [
+        {
+          fileName: {
+            type: String,
+            required: true,
+          },
+          mimetype: {
+            type: String,
+            required: true,
+          },
+          size: {
+            type: Number,
+            required: true,
+          },
+          url: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
     },
   ],
 });
