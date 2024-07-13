@@ -1,20 +1,18 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import axios from "axios";
+
 import Navbar from "./components/layout/Navbar";
 import Landing from "./components/layout/Landing";
-//import Register from './components/auth/Register';
-//import Login from './components/auth/Login';
+import Footer from "./components/layout/Footer";
+import Login from "./components/auth/Login";
 import Alert from "./components/layout/Alert";
-/*import Dashboard from './components/dashboard/Dashboard';
-import ProfileForm from './components/profile-forms/ProfileForm';
-import AddExperience from './components/profile-forms/AddExperience';
-import AddEducation from './components/profile-forms/AddEducation';
-import Profiles from './components/profiles/Profiles';
-import Profile from './components/profile/Profile';
-import Posts from './components/posts/Posts';
-import Post from './components/post/Post';*/
+import Dashboard from "./components/dashboard/Dashboard";
+import PrivateRoute from "./components/routing/PrivateRoute";
+
+//import Dashboard from "./components/dashboard/Dashboard";
 import NotFound from "./components/layout/NotFound";
-//import PrivateRoute from './components/routing/PrivateRoute';
+//import PrivateRoute from "./components/routing/PrivateRoute";
 import { LOGOUT } from "./actions/types";
 
 // Redux
@@ -34,13 +32,19 @@ const App = () => {
     }
     // try to fetch a user, if no token or invalid token we
     // will get a 401 response from our API
-    store.dispatch(loadUser());
+    //store.dispatch(loadUser());
 
     // log user out from all tabs if they log out in one tab
     window.addEventListener("storage", () => {
       if (!localStorage.token) store.dispatch({ type: LOGOUT });
     });
   }, []);
+
+  // Set the default authorization header with the token
+  const token = localStorage.getItem("token");
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
 
   return (
     <Provider store={store}>
@@ -49,8 +53,14 @@ const App = () => {
         <Alert />
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={<PrivateRoute component={Dashboard} />}
+          />
           <Route path="/*" element={<NotFound />} />
         </Routes>
+        <Footer />
       </Router>
     </Provider>
   );
