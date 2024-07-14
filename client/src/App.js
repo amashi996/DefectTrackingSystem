@@ -54,10 +54,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={<PrivateRoute component={Dashboard} />}
-          />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/*" element={<NotFound />} />
         </Routes>
         <Footer />
